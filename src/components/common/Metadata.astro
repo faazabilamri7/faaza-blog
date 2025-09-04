@@ -2,7 +2,7 @@
 import merge from 'lodash.merge';
 import { AstroSeo } from '@astrolib/seo';
 
-import type { Props as AstroSeoProps } from '@astrolib/seo';
+import type { AstroSeoProps } from '@astrolib/seo';
 
 import { SITE, METADATA, I18N } from 'astrowind:config';
 import type { MetaData } from '~/types';
@@ -12,6 +12,7 @@ import { adaptOpenGraphImages } from '~/utils/images';
 
 export interface Props extends MetaData {
   dontUseTitleTemplate?: boolean;
+  keywords?: string[];
 }
 
 const {
@@ -20,6 +21,7 @@ const {
   canonical = String(getCanonical(String(Astro.url.pathname))),
   robots = {},
   description,
+  keywords = [],
   openGraph = {},
   twitter = {},
 } = Astro.props;
@@ -49,6 +51,7 @@ const seoProps: AstroSeoProps = merge(
     noindex: typeof METADATA?.robots?.index !== 'undefined' ? !METADATA.robots.index : undefined,
     nofollow: typeof METADATA?.robots?.follow !== 'undefined' ? !METADATA.robots.follow : undefined,
     description: METADATA?.description,
+    keywords: METADATA?.keywords,
     openGraph: METADATA?.openGraph,
     twitter: METADATA?.twitter,
   },
@@ -59,6 +62,7 @@ const seoProps: AstroSeoProps = merge(
     noindex: typeof robots?.index !== 'undefined' ? !robots.index : undefined,
     nofollow: typeof robots?.follow !== 'undefined' ? !robots.follow : undefined,
     description: description,
+    keywords: keywords,
     openGraph: { url: canonical, ...openGraph },
     twitter: twitter,
   }
@@ -66,3 +70,4 @@ const seoProps: AstroSeoProps = merge(
 ---
 
 <AstroSeo {...{ ...seoProps, openGraph: await adaptOpenGraphImages(seoProps?.openGraph, Astro.site) }} />
+{keywords && keywords.length > 0 && <meta name="keywords" content={keywords.join(', ')} />}

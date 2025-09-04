@@ -1,0 +1,95 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '~/layouts/PageLayout.astro';
+import Button from '~/components/ui/Button.astro';
+
+const projects = await getCollection('portfolio');
+
+const metadata = {
+  title: 'Portfolio',
+  description: 'Showcase of my projects and work',
+};
+---
+
+<Layout metadata={metadata}>
+  <!-- Hero Section -->
+  <section class="py-16 bg-gradient-to-r from-blue-600 to-purple-700 text-white">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-6xl font-bold mb-6">My Portfolio</h1>
+      <p class="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
+        A collection of projects that showcase my skills in web development, from e-commerce platforms to interactive dashboards.
+      </p>
+    </div>
+  </section>
+
+  <!-- Projects Grid -->
+  <section class="py-16">
+    <div class="container mx-auto px-4">
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {projects.map((project) => (
+          <article class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 group">
+            <div class="relative overflow-hidden">
+              <img
+                src={project.data.image || 'https://images.unsplash.com/photo-1555949963-aa79dcee981c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'}
+                alt={project.data.title}
+                class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300"></div>
+            </div>
+
+            <div class="p-6">
+              <h3 class="text-xl font-bold mb-2 text-gray-900 dark:text-white">{project.data.title}</h3>
+              <p class="text-gray-600 dark:text-gray-300 mb-4">{project.data.excerpt}</p>
+
+              {project.data.technologies && (
+                <div class="mb-4">
+                  <div class="flex flex-wrap gap-2">
+                    {project.data.technologies.map((tech) => (
+                      <span class="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div class="flex gap-3">
+                {project.data.demoUrl && (
+                  <Button
+                    variant="primary"
+                    href={project.data.demoUrl}
+                    class="flex-1"
+                  >
+                    Live Demo
+                  </Button>
+                )}
+                {project.data.sourceUrl && (
+                  <Button
+                    variant="secondary"
+                    href={project.data.sourceUrl}
+                    class="flex-1"
+                  >
+                    Source Code
+                  </Button>
+                )}
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action -->
+  <section class="py-16 bg-gray-50 dark:bg-gray-900">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-3xl font-bold mb-6">Interested in Working Together?</h2>
+      <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+        I'm always open to discussing new opportunities and interesting projects. Let's create something amazing together!
+      </p>
+      <Button variant="primary" href="/about">
+        Get In Touch
+      </Button>
+    </div>
+  </section>
+</Layout>

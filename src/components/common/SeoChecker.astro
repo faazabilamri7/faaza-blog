@@ -1,0 +1,51 @@
+---
+export interface Props {
+  title?: string;
+  description?: string;
+  keywords?: string[];
+  excerpt?: string;
+  image?: string;
+}
+
+const { title, description, keywords, excerpt, image } = Astro.props;
+
+const checks = [
+  {
+    name: 'Title Length',
+    status: title && title.length >= 30 && title.length <= 60 ? 'good' : 'warning',
+    message: title ? `Title is ${title.length} characters. Ideal: 30-60.` : 'No title found.'
+  },
+  {
+    name: 'Meta Description',
+    status: description && description.length >= 120 && description.length <= 160 ? 'good' : 'warning',
+    message: description ? `Description is ${description.length} characters. Ideal: 120-160.` : 'No description found.'
+  },
+  {
+    name: 'Keywords',
+    status: keywords && keywords.length > 0 ? 'good' : 'warning',
+    message: keywords ? `Found ${keywords.length} keywords.` : 'No keywords found.'
+  },
+  {
+    name: 'Excerpt',
+    status: excerpt && excerpt.length > 0 ? 'good' : 'warning',
+    message: excerpt ? 'Excerpt present.' : 'No excerpt found.'
+  },
+  {
+    name: 'Image',
+    status: image ? 'good' : 'warning',
+    message: image ? 'Featured image present.' : 'No featured image.'
+  }
+];
+---
+
+<div class="seo-checker bg-gray-100 p-4 rounded-lg">
+  <h3 class="text-lg font-bold mb-4">SEO Analysis</h3>
+  <ul class="space-y-2">
+    {checks.map(check => (
+      <li class={`flex items-center ${check.status === 'good' ? 'text-green-600' : 'text-yellow-600'}`}>
+        <span class="mr-2">{check.status === 'good' ? '✓' : '⚠'}</span>
+        <strong>{check.name}:</strong> {check.message}
+      </li>
+    ))}
+  </ul>
+</div>

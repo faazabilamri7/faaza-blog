@@ -1,0 +1,246 @@
+---
+// ReadingList.astro - Component to display saved reading list
+---
+
+<div id="reading-list" class="reading-list-container hidden fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-800 shadow-lg border-l border-gray-200 dark:border-gray-700 z-50 transform translate-x-full transition-transform duration-300">
+  <div class="flex flex-col h-full">
+    <!-- Header -->
+    <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Reading List</h2>
+      <button
+        id="close-reading-list"
+        class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+        aria-label="Close reading list"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Content -->
+    <div class="flex-1 overflow-y-auto p-4">
+      <div id="reading-list-items" class="space-y-3">
+        <!-- Items will be populated by JavaScript -->
+      </div>
+
+      <div id="empty-reading-list" class="text-center py-8 text-gray-500 dark:text-gray-400">
+        <svg class="w-12 h-12 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+        </svg>
+        <p class="text-sm">Your reading list is empty</p>
+        <p class="text-xs mt-1">Add posts to read later</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+      <button
+        id="clear-reading-list"
+        class="w-full px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 border border-red-300 dark:border-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+        aria-label="Clear all items from reading list"
+      >
+        Clear All
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Reading List Toggle Button -->
+<button
+  id="toggle-reading-list"
+  class="fixed bottom-6 right-6 z-40 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-colors duration-200"
+  aria-label="Toggle reading list"
+>
+  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+  </svg>
+  <span id="reading-list-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+</button>
+
+<style>
+  .reading-list-container.show {
+    transform: translateX(0);
+  }
+
+  .reading-list-item {
+    @apply p-3 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-colors duration-200;
+  }
+
+  .reading-list-item h3 {
+    @apply text-sm font-medium text-gray-900 dark:text-white mb-1 line-clamp-2;
+  }
+
+  .reading-list-item p {
+    @apply text-xs text-gray-500 dark:text-gray-400;
+  }
+
+  .reading-list-item .remove-btn {
+    @apply text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors duration-200;
+  }
+</style>
+
+<script>
+  // Reading list display functionality
+  class ReadingListDisplay {
+    private static STORAGE_KEY = 'astro-blog-reading-list';
+    private static container: HTMLElement;
+    private static itemsContainer: HTMLElement;
+    private static emptyState: HTMLElement;
+    private static countBadge: HTMLElement;
+
+    static init() {
+      this.container = document.getElementById('reading-list')!;
+      this.itemsContainer = document.getElementById('reading-list-items')!;
+      this.emptyState = document.getElementById('empty-reading-list')!;
+      this.countBadge = document.getElementById('reading-list-count')!;
+
+      this.setupEventListeners();
+      this.renderReadingList();
+    }
+
+    private static setupEventListeners() {
+      // Toggle reading list
+      const toggleBtn = document.getElementById('toggle-reading-list')!;
+      toggleBtn.addEventListener('click', () => {
+        this.container.classList.toggle('show');
+      });
+
+      // Close reading list
+      const closeBtn = document.getElementById('close-reading-list')!;
+      closeBtn.addEventListener('click', () => {
+        this.container.classList.remove('show');
+      });
+
+      // Clear all items
+      const clearBtn = document.getElementById('clear-reading-list')!;
+      clearBtn.addEventListener('click', () => {
+        if (confirm('Are you sure you want to clear your entire reading list?')) {
+          localStorage.removeItem(this.STORAGE_KEY);
+          this.renderReadingList();
+          window.dispatchEvent(new CustomEvent('readingListCleared'));
+        }
+      });
+
+      // Listen for reading list updates
+      window.addEventListener('readingListUpdated', () => {
+        this.renderReadingList();
+      });
+
+      // Close on outside click
+      document.addEventListener('click', (e) => {
+        if (!this.container.contains(e.target as Node) &&
+            !document.getElementById('toggle-reading-list')!.contains(e.target as Node)) {
+          this.container.classList.remove('show');
+        }
+      });
+    }
+
+    private static renderReadingList() {
+      const list = this.getReadingList();
+      this.itemsContainer.innerHTML = '';
+
+      if (list.length === 0) {
+        this.emptyState.classList.remove('hidden');
+        this.countBadge.classList.add('hidden');
+        return;
+      }
+
+      this.emptyState.classList.add('hidden');
+      this.countBadge.classList.remove('hidden');
+      this.countBadge.textContent = list.length.toString();
+
+      list.forEach(item => {
+        const itemElement = this.createListItem(item);
+        this.itemsContainer.appendChild(itemElement);
+      });
+    }
+
+    private static createListItem(item: any): HTMLElement {
+      const div = document.createElement('div');
+      div.className = 'reading-list-item';
+      div.innerHTML = `
+        <div class="flex justify-between items-start">
+          <div class="flex-1 min-w-0">
+            <h3 class="truncate">${item.title}</h3>
+            <p>Added ${this.formatDate(item.addedAt)}</p>
+          </div>
+          <div class="flex space-x-2 ml-2">
+            <button
+              class="remove-btn p-1"
+              data-post-id="${item.id}"
+              aria-label="Remove from reading list"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+            <a
+              href="${item.url}"
+              class="p-1 text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-200"
+              aria-label="Read post"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+              </svg>
+            </a>
+          </div>
+        </div>
+      `;
+
+      // Add remove functionality
+      const removeBtn = div.querySelector('.remove-btn')!;
+      removeBtn.addEventListener('click', () => {
+        this.removeItem(item.id);
+      });
+
+      return div;
+    }
+
+    private static removeItem(postId: string) {
+      const list = this.getReadingList();
+      const filteredList = list.filter(item => item.id !== postId);
+      this.saveReadingList(filteredList);
+      this.renderReadingList();
+      window.dispatchEvent(new CustomEvent('readingListUpdated', {
+        detail: { postId, action: 'removed' }
+      }));
+    }
+
+    private static getReadingList(): any[] {
+      try {
+        const stored = localStorage.getItem(this.STORAGE_KEY);
+        return stored ? JSON.parse(stored) : [];
+      } catch (error) {
+        console.error('Error reading reading list from localStorage:', error);
+        return [];
+      }
+    }
+
+    private static saveReadingList(list: any[]): void {
+      try {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(list));
+      } catch (error) {
+        console.error('Error saving reading list to localStorage:', error);
+      }
+    }
+
+    private static formatDate(dateString: string): string {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffTime = Math.abs(now.getTime() - date.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) return 'today';
+      if (diffDays === 2) return 'yesterday';
+      if (diffDays < 7) return `${diffDays} days ago`;
+      if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
+      return date.toLocaleDateString();
+    }
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    ReadingListDisplay.init();
+  });
+</script>

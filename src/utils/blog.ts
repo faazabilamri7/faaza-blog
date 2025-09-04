@@ -278,4 +278,52 @@ export async function getRelatedPosts(originalPost: Post, maxResults: number = 4
   }
 
   return selectedPosts;
+};
+
+/** */
+export async function getRecommendedPosts(maxResults: number = 4): Promise<Post[]> {
+  const allPosts = await fetchPosts();
+
+  // Get user behavior from localStorage (server-side, so we'll use a simple fallback)
+  // In production, this would be stored server-side
+  const viewedCategories: string[] = [];
+  const viewedTags: string[] = [];
+
+  const postsWithScores = allPosts.reduce((acc: { post: Post; score: number }[], iteratedPost: Post) => {
+    let score = 0;
+
+    // Score based on viewed categories
+    if (iteratedPost.category && viewedCategories.includes(iteratedPost.category.slug)) {
+      score += 5;
+    }
+
+    // Score based on viewed tags
+    if (iteratedPost.tags) {
+      iteratedPost.tags.forEach((tag) => {
+        if (viewedTags.includes(tag.slug)) {
+          score += 1;
+        }
+      });
+    }
+
+    // Fallback: score based on recency for new users
+    if (viewedCategories.length === 0 && viewedTags.length === 0) {
+      const daysSincePublish = (Date.now() - iteratedPost.publishDate.getTime()) / (1000 * 60 * 60 * 24);
+      score += Math.max(0, 30 - daysSincePublish); // Recent posts get higher score
+    }
+
+    acc.push({ post: iteratedPost, score });
+    return acc;
+  }, []);
+
+  postsWithScores.sort((a, b) => b.score - a.score);
+
+  const selectedPosts: Post[] = [];
+  let i = 0;
+  while (selectedPosts.length < maxResults && i < postsWithScores.length) {
+    selectedPosts.push(postsWithScores[i].post);
+    i++;
+  }
+
+  return selectedPosts;
 }

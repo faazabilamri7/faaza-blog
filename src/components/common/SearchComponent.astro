@@ -1,0 +1,76 @@
+---
+// SearchComponent.astro
+export interface Props {
+  placeholder?: string;
+  class?: string;
+}
+
+const { placeholder = 'Search...', class: className = '' } = Astro.props;
+---
+
+<div class={className}>
+  <div id="search-autocomplete" class="relative">
+    <form action="/search" method="get" class="flex items-center">
+      <input
+        type="text"
+        id="search-input"
+        name="q"
+        placeholder={placeholder}
+        class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-l-md focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-800 dark:text-white w-full"
+        aria-label="Search"
+        autocomplete="off"
+      />
+      <button
+        type="submit"
+        class="px-4 py-2 bg-primary text-white rounded-r-md hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary"
+        aria-label="Submit search"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+        </svg>
+      </button>
+    </form>
+    <div id="autocomplete-panel" class="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg mt-1 hidden"></div>
+  </div>
+</div>
+
+<script>
+  import { autocomplete } from '@algolia/autocomplete-js';
+  import { algoliasearch } from 'algoliasearch';
+
+  const appId = 'YOUR_APP_ID';
+  const searchKey = 'YOUR_SEARCH_ONLY_API_KEY';
+
+  const searchClient = algoliasearch(appId, searchKey);
+
+  autocomplete({
+    container: '#search-autocomplete',
+    panelContainer: '#autocomplete-panel',
+    panelPlacement: 'input-wrapper-width',
+    getSources({ query }) {
+      return [
+        {
+          sourceId: 'posts',
+          getItems() {
+            return searchClient.search([{ indexName: 'posts', query }]).then(({ results }) => {
+              return results[0].hits.slice(0, 5);
+            });
+          },
+          templates: {
+            item({ item }) {
+              return `
+                <div class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+                  <div class="font-medium">${item.title}</div>
+                  <div class="text-sm text-gray-600 dark:text-gray-400">${item.excerpt?.substring(0, 100)}...</div>
+                </div>
+              `;
+            },
+          },
+          onSelect({ item }) {
+            window.location.href = `/${item.permalink}`;
+          },
+        },
+      ];
+    },
+  });
+</script>

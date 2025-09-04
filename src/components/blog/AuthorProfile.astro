@@ -1,0 +1,50 @@
+---
+// AuthorProfile.astro
+import Image from '~/components/common/Image.astro';
+import { Icon } from 'astro-icon/components';
+
+export interface Props {
+  author: {
+    name: string;
+    bio?: string;
+    avatar?: string;
+    socialLinks?: Array<{ platform: string; url: string }>;
+  };
+  class?: string;
+}
+
+const { author, class: className = '' } = Astro.props;
+---
+
+<div class={`flex flex-col items-center p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md ${className}`}>
+  {author.avatar && (
+    <Image
+      src={author.avatar}
+      alt={`Avatar of ${author.name}`}
+      class="w-24 h-24 rounded-full mb-4"
+      width={96}
+      height={96}
+      loading="lazy"
+      decoding="async"
+    />
+  )}
+  <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">{author.name}</h3>
+  {author.bio && (
+    <p class="text-gray-600 dark:text-gray-300 text-center mb-4">{author.bio}</p>
+  )}
+  {author.socialLinks && author.socialLinks.length > 0 && (
+    <div class="flex space-x-4">
+      {author.socialLinks.map((link) => (
+        <a
+          href={link.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-colors"
+          aria-label={`${author.name} on ${link.platform}`}
+        >
+          <Icon name={`tabler:brand-${link.platform.toLowerCase()}`} class="w-6 h-6" />
+        </a>
+      ))}
+    </div>
+  )}
+</div>

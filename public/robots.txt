@@ -1,2 +1,14 @@
 User-agent: *
-Disallow:
+Allow: /
+
+# Block access to admin areas
+Disallow: /admin/
+Disallow: /_astro/
+Disallow: /api/
+
+# Allow crawling of CSS and JS
+Allow: /_astro/*.css
+Allow: /_astro/*.js
+
+# Sitemap
+Sitemap: https://astrowind.vercel.app/sitemap-index.xml

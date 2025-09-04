@@ -17,6 +17,7 @@ const metadataDefinition = () =>
         .optional(),
 
       description: z.string().optional(),
+      keywords: z.array(z.string()).optional(),
 
       openGraph: z
         .object({
@@ -65,6 +66,27 @@ const postCollection = defineCollection({
   }),
 });
 
+const portfolioCollection = defineCollection({
+  loader: glob({ pattern: ['*.md', '*.mdx'], base: 'src/data/portfolio' }),
+  schema: z.object({
+    publishDate: z.date().optional(),
+    updateDate: z.date().optional(),
+    draft: z.boolean().optional(),
+
+    title: z.string(),
+    excerpt: z.string().optional(),
+    image: z.string().optional(),
+
+    technologies: z.array(z.string()).optional(),
+    demoUrl: z.string().url().optional(),
+    sourceUrl: z.string().url().optional(),
+    category: z.string().optional(),
+
+    metadata: metadataDefinition(),
+  }),
+});
+
 export const collections = {
   post: postCollection,
+  portfolio: portfolioCollection,
 };

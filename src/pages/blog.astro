@@ -1,0 +1,133 @@
+---
+import type { InferGetStaticPropsType, GetStaticPaths } from 'astro';
+import Layout from '~/layouts/PageLayout.astro';
+import Grid from '~/components/blog/Grid.astro';
+import List from '~/components/blog/List.astro';
+import Headline from '~/components/blog/Headline.astro';
+import Pagination from '~/components/blog/Pagination.astro';
+import { getStaticPathsBlogList } from '~/utils/blog';
+
+export const prerender = true;
+
+export const getStaticPaths = (async ({ paginate }) => {
+  return await getStaticPathsBlogList({ paginate });
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { page } = Astro.props as Props;
+
+const currentPage = page.currentPage ?? 1;
+
+const metadata = {
+  title: `Blog${currentPage > 1 ? ` — Page ${currentPage}` : ''}`,
+  description: 'Browse all blog posts',
+};
+---
+
+<Layout metadata={metadata}>
+  <section class="px-4 md:px-6 py-12 sm:py-16 lg:py-20 mx-auto max-w-6xl">
+    <Headline>Blog</Headline>
+
+    <!-- Filters -->
+    <div class="mb-8 flex flex-wrap gap-4">
+      <select id="category-filter" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800">
+        <option value="">All Categories</option>
+      </select>
+      <select id="tag-filter" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800">
+        <option value="">All Tags</option>
+      </select>
+      <input type="date" id="date-from" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800" placeholder="From date">
+      <input type="date" id="date-to" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800" placeholder="To date">
+      <button id="apply-filters" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark">Apply Filters</button>
+    </div>
+
+    <!-- View Toggle -->
+    <div class="mb-8 flex justify-between items-center">
+      <div class="flex gap-2">
+        <button id="grid-view" class="px-4 py-2 bg-primary text-white rounded-md">Grid</button>
+        <button id="list-view" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md">List</button>
+      </div>
+      <div class="text-sm text-gray-600 dark:text-gray-400">
+        {page.data.length} posts
+      </div>
+    </div>
+
+    <!-- Posts -->
+    <div id="posts-container">
+      <Grid posts={page.data} />
+    </div>
+
+    <Pagination prevUrl={page.url.prev} nextUrl={page.url.next} />
+  </section>
+</Layout>
+
+<script>
+  // Simple client-side filtering (in production, this would be server-side)
+  const categoryFilter = document.getElementById('category-filter');
+  const tagFilter = document.getElementById('tag-filter');
+  const dateFrom = document.getElementById('date-from');
+  const dateTo = document.getElementById('date-to');
+  const applyFilters = document.getElementById('apply-filters');
+  const gridView = document.getElementById('grid-view');
+  const listView = document.getElementById('list-view');
+  const postsContainer = document.getElementById('posts-container');
+
+  // Populate filters with available options
+  // This would ideally come from server-side data
+  const categories = ['Technology', 'Lifestyle', 'Travel'];
+  const tags = ['JavaScript', 'React', 'Astro', 'Web Development'];
+
+  categories.forEach(cat => {
+    const option = document.createElement('option');
+    option.value = cat.toLowerCase();
+    option.textContent = cat;
+    categoryFilter.appendChild(option);
+  });
+
+  tags.forEach(tag => {
+    const option = document.createElement('option');
+    option.value = tag.toLowerCase();
+    option.textContent = tag;
+    tagFilter.appendChild(option);
+  });
+
+  // View toggle
+  gridView.addEventListener('click', () => {
+    gridView.classList.add('bg-primary', 'text-white');
+    gridView.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+    listView.classList.remove('bg-primary', 'text-white');
+    listView.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+    // In production, this would reload with different view
+  });
+
+  listView.addEventListener('click', () => {
+    listView.classList.add('bg-primary', 'text-white');
+    listView.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+    gridView.classList.remove('bg-primary', 'text-white');
+    gridView.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+    // In production, this would reload with different view
+  });
+
+  // Apply filters (redirect to filtered URL)
+  applyFilters.addEventListener('click', () => {
+    const category = categoryFilter.value;
+    const tag = tagFilter.value;
+    const from = dateFrom.value;
+    const to = dateTo.value;
+
+    let url = '/blog';
+    const params = new URLSearchParams();
+
+    if (category) params.set('category', category);
+    if (tag) params.set('tag', tag);
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+
+    if (params.toString()) {
+      url += '?' + params.toString();
+    }
+
+    window.location.href = url;
+  });
+</script>

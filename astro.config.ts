@@ -14,6 +14,7 @@ import type { AstroIntegration } from 'astro';
 import astrowind from './vendor/integration';
 
 import { readingTimeRemarkPlugin, responsiveTablesRehypePlugin, lazyImagesRehypePlugin } from './src/utils/frontmatter';
+import { codeBlockPlugin } from './src/utils/codeBlockPlugin';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -29,7 +30,12 @@ export default defineConfig({
       applyBaseStyles: false,
     }),
     sitemap(),
-    mdx(),
+    mdx({
+      components: {
+        CodeBlock: '~/components/ui/CodeBlock.astro',
+        InteractiveDemo: '~/components/ui/InteractiveDemo.astro',
+      },
+    }),
     icon({
       include: {
         tabler: ['*'],
@@ -77,7 +83,7 @@ export default defineConfig({
 
   markdown: {
     remarkPlugins: [readingTimeRemarkPlugin],
-    rehypePlugins: [responsiveTablesRehypePlugin, lazyImagesRehypePlugin],
+    rehypePlugins: [responsiveTablesRehypePlugin, lazyImagesRehypePlugin, codeBlockPlugin()],
   },
 
   vite: {
@@ -85,6 +91,9 @@ export default defineConfig({
       alias: {
         '~': path.resolve(__dirname, './src'),
       },
+    },
+    ssr: {
+      noExternal: ['@astrojs/prism'],
     },
   },
 });

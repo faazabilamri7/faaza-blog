@@ -1,0 +1,56 @@
+---
+// CommentSection.astro
+export interface Props {
+  disqusShortname?: string;
+  pageUrl: string;
+  pageIdentifier: string;
+  title: string;
+  language?: string;
+  category?: string;
+  class?: string;
+}
+
+const {
+  disqusShortname = import.meta.env.PUBLIC_DISQUS_SHORTNAME || 'your-disqus-shortname',
+  pageUrl,
+  pageIdentifier,
+  title,
+  language = 'en',
+  category,
+  class: className = ''
+} = Astro.props;
+---
+
+<div class={`mt-8 ${className}`} id="disqus_thread"></div>
+
+<script define:vars={{ disqusShortname, pageUrl, pageIdentifier, title, language, category }}>
+  // Disqus configuration
+  var disqus_config = function () {
+    this.page.url = pageUrl;
+    this.page.identifier = pageIdentifier;
+    this.page.title = title;
+    this.language = language;
+    if (category) {
+      this.page.category_id = category;
+    }
+  };
+
+  (function() {
+    var d = document, s = d.createElement('script');
+    s.src = `https://${disqusShortname}.disqus.com/embed.js`;
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+  })();
+
+  // Error handling
+  window.addEventListener('error', function(e) {
+    if (e.target && e.target.src && e.target.src.includes('disqus.com')) {
+      console.warn('Disqus failed to load:', e);
+      document.getElementById('disqus_thread').innerHTML = '<p>Comments are temporarily unavailable.</p>';
+    }
+  });
+</script>
+
+<noscript>
+  Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript" rel="nofollow">comments powered by Disqus.</a>
+</noscript>

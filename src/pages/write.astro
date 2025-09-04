@@ -1,0 +1,304 @@
+---
+// Write mode - Distraction-free writing interface
+import Layout from '~/layouts/Layout.astro';
+import { getPermalink } from '~/utils/permalinks';
+
+const metadata = {
+  title: 'Write Mode - Distraction Free',
+  description: 'Distraction-free writing environment for creating blog posts',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+---
+
+<Layout metadata={metadata}>
+  <div id="write-mode" class="min-h-screen bg-white dark:bg-gray-900">
+    <!-- Header -->
+    <header class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <button
+            id="exit-write-mode"
+            class="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+            aria-label="Exit write mode"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+            </svg>
+            <span class="text-sm font-medium">Exit</span>
+          </button>
+          <div class="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
+          <h1 class="text-lg font-semibold text-gray-900 dark:text-white">Write Mode</h1>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <div class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+            <span id="word-count">0</span>
+            <span>words</span>
+          </div>
+          <div class="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
+          <button
+            id="preview-toggle"
+            class="px-3 py-1 text-sm font-medium text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+            aria-label="Toggle preview"
+          >
+            Preview
+          </button>
+          <button
+            id="save-draft"
+            class="px-3 py-1 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors duration-200"
+            aria-label="Save draft"
+          >
+            Save Draft
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex h-[calc(100vh-73px)]">
+      <!-- Editor Panel -->
+      <div id="editor-panel" class="flex-1 flex flex-col">
+        <div class="flex-1 p-6">
+          <textarea
+            id="markdown-editor"
+            class="w-full h-full resize-none border-none outline-none bg-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-base leading-relaxed font-mono"
+            placeholder="Start writing your post here... Use Markdown syntax for formatting."
+            spellcheck="false"
+            autocorrect="off"
+            autocapitalize="off"
+            autocomplete="off"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Preview Panel -->
+      <div id="preview-panel" class="flex-1 border-l border-gray-200 dark:border-gray-700 hidden">
+        <div class="p-6">
+          <div id="markdown-preview" class="prose prose-lg dark:prose-invert max-w-none">
+            <!-- Preview content will be rendered here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  #write-mode {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  #markdown-editor {
+    line-height: 1.7;
+    font-size: 16px;
+  }
+
+  #markdown-editor:focus {
+    outline: none;
+  }
+
+  /* Hide scrollbars for cleaner look */
+  #markdown-editor::-webkit-scrollbar,
+  #preview-panel::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Custom scrollbar for webkit browsers */
+  #markdown-editor::-webkit-scrollbar-track,
+  #preview-panel::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  #markdown-editor::-webkit-scrollbar-thumb,
+  #preview-panel::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.3);
+    border-radius: 4px;
+  }
+
+  #markdown-editor::-webkit-scrollbar-thumb:hover,
+  #preview-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.5);
+  }
+</style>
+
+<script>
+  // Write Mode functionality
+  class WriteMode {
+    private static editor: HTMLTextAreaElement;
+    private static preview: HTMLElement;
+    private static wordCount: HTMLElement;
+    private static previewPanel: HTMLElement;
+    private static previewToggle: HTMLElement;
+    private static exitButton: HTMLElement;
+    private static saveButton: HTMLElement;
+
+    static init() {
+      this.editor = document.getElementById('markdown-editor') as HTMLTextAreaElement;
+      this.preview = document.getElementById('markdown-preview') as HTMLElement;
+      this.wordCount = document.getElementById('word-count') as HTMLElement;
+      this.previewPanel = document.getElementById('preview-panel') as HTMLElement;
+      this.previewToggle = document.getElementById('preview-toggle') as HTMLElement;
+      this.exitButton = document.getElementById('exit-write-mode') as HTMLElement;
+      this.saveButton = document.getElementById('save-draft') as HTMLElement;
+
+      this.setupEventListeners();
+      this.loadDraft();
+      this.updateWordCount();
+    }
+
+    private static setupEventListeners() {
+      // Auto-save functionality
+      let saveTimeout: number;
+      this.editor.addEventListener('input', () => {
+        this.updateWordCount();
+        this.updatePreview();
+
+        // Debounced auto-save
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+          this.saveDraft();
+        }, 1000);
+      });
+
+      // Preview toggle
+      this.previewToggle.addEventListener('click', () => {
+        const isPreviewVisible = !this.previewPanel.classList.contains('hidden');
+
+        if (isPreviewVisible) {
+          this.previewPanel.classList.add('hidden');
+          this.previewToggle.textContent = 'Preview';
+          document.getElementById('editor-panel')!.style.flex = '1';
+        } else {
+          this.previewPanel.classList.remove('hidden');
+          this.previewToggle.textContent = 'Hide Preview';
+          document.getElementById('editor-panel')!.style.flex = '1';
+          this.updatePreview();
+        }
+      });
+
+      // Exit write mode
+      this.exitButton.addEventListener('click', () => {
+        if (this.editor.value.trim() && !confirm('You have unsaved changes. Are you sure you want to exit?')) {
+          return;
+        }
+        window.location.href = '/';
+      });
+
+      // Manual save
+      this.saveButton.addEventListener('click', () => {
+        this.saveDraft();
+        this.showSaveConfirmation();
+      });
+
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        // Ctrl/Cmd + S to save
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+          e.preventDefault();
+          this.saveDraft();
+          this.showSaveConfirmation();
+        }
+
+        // Ctrl/Cmd + P to toggle preview
+        if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+          e.preventDefault();
+          this.previewToggle.click();
+        }
+
+        // Escape to exit
+        if (e.key === 'Escape') {
+          this.exitButton.click();
+        }
+      });
+    }
+
+    private static updateWordCount() {
+      const text = this.editor.value.trim();
+      const words = text ? text.split(/\s+/).length : 0;
+      this.wordCount.textContent = words.toString();
+    }
+
+    private static updatePreview() {
+      const markdown = this.editor.value;
+      // Simple markdown to HTML conversion (basic implementation)
+      const html = this.markdownToHtml(markdown);
+      this.preview.innerHTML = html;
+    }
+
+    private static markdownToHtml(markdown: string): string {
+      return markdown
+        // Headers
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        // Bold
+        .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+        // Italic
+        .replace(/\*(.*)\*/gim, '<em>$1</em>')
+        // Code blocks
+        .replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>')
+        // Inline code
+        .replace(/`([^`]+)`/gim, '<code>$1</code>')
+        // Links
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2">$1</a>')
+        // Lists
+        .replace(/^\* (.*$)/gim, '<li>$1</li>')
+        .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
+        // Line breaks
+        .replace(/\n/gim, '<br>');
+    }
+
+    private static saveDraft() {
+      const content = this.editor.value;
+      const timestamp = new Date().toISOString();
+
+      const draft = {
+        content,
+        timestamp,
+        wordCount: this.wordCount.textContent
+      };
+
+      try {
+        localStorage.setItem('write-mode-draft', JSON.stringify(draft));
+      } catch (error) {
+        console.error('Failed to save draft:', error);
+      }
+    }
+
+    private static loadDraft() {
+      try {
+        const draft = localStorage.getItem('write-mode-draft');
+        if (draft) {
+          const parsed = JSON.parse(draft);
+          this.editor.value = parsed.content;
+          this.updateWordCount();
+        }
+      } catch (error) {
+        console.error('Failed to load draft:', error);
+      }
+    }
+
+    private static showSaveConfirmation() {
+      const button = this.saveButton;
+      const originalText = button.textContent;
+
+      button.textContent = 'Saved!';
+      button.classList.add('bg-green-600', 'hover:bg-green-700');
+      button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove('bg-green-600', 'hover:bg-green-700');
+        button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+      }, 2000);
+    }
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    WriteMode.init();
+  });
+</script>

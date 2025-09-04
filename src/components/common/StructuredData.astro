@@ -1,0 +1,64 @@
+---
+import { SITE } from 'astrowind:config';
+
+export interface Props {
+  type: 'organization' | 'article' | 'breadcrumbs';
+  data?: any;
+}
+
+const { type, data } = Astro.props;
+
+let jsonLd = {};
+
+if (type === 'organization') {
+  jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: SITE?.name,
+    url: SITE?.site,
+    logo: `${SITE?.site}/favicon.svg`,
+    sameAs: [
+      // Add social media URLs if available
+    ]
+  };
+} else if (type === 'article' && data) {
+  jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: data.title,
+    description: data.excerpt,
+    image: data.image,
+    datePublished: data.publishDate?.toISOString(),
+    dateModified: data.updateDate?.toISOString(),
+    author: {
+      '@type': 'Person',
+      name: data.author
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: SITE?.name,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE?.site}/favicon.svg`
+      }
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': data.canonical
+    }
+  };
+} else if (type === 'breadcrumbs' && data) {
+  jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: data.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: item.name,
+      item: item.url
+    }))
+  };
+}
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>

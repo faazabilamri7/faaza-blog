@@ -1,0 +1,64 @@
+---
+// ConsentBanner.astro
+---
+
+<div id="consent-banner" class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white p-4 z-50 hidden">
+  <div class="container mx-auto flex flex-col sm:flex-row items-center justify-between">
+    <p class="text-sm mb-2 sm:mb-0">
+      We use cookies to improve your experience. By continuing to use our site, you agree to our use of cookies.
+    </p>
+    <div class="flex space-x-2">
+      <button id="accept-cookies" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm">
+        Accept
+      </button>
+      <button id="decline-cookies" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-sm">
+        Decline
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Check if consent has been given
+  let consentGiven;
+  try {
+    consentGiven = localStorage.getItem('cookie-consent');
+  } catch (e) {
+    console.warn('localStorage not available:', e);
+  }
+
+  if (!consentGiven) {
+    const banner = document.getElementById('consent-banner');
+    if (banner) banner.classList.remove('hidden');
+  }
+
+  // Handle accept
+  const acceptBtn = document.getElementById('accept-cookies');
+  if (acceptBtn) {
+    acceptBtn.addEventListener('click', () => {
+      try {
+        localStorage.setItem('cookie-consent', 'accepted');
+      } catch (e) {
+        console.warn('Failed to store consent:', e);
+      }
+      const banner = document.getElementById('consent-banner');
+      if (banner) banner.classList.add('hidden');
+      // Trigger GA load
+      window.dispatchEvent(new CustomEvent('consent-given'));
+    });
+  }
+
+  // Handle decline
+  const declineBtn = document.getElementById('decline-cookies');
+  if (declineBtn) {
+    declineBtn.addEventListener('click', () => {
+      try {
+        localStorage.setItem('cookie-consent', 'declined');
+      } catch (e) {
+        console.warn('Failed to store consent:', e);
+      }
+      const banner = document.getElementById('consent-banner');
+      if (banner) banner.classList.add('hidden');
+    });
+  }
+</script>

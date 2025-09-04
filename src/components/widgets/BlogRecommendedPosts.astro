@@ -1,0 +1,105 @@
+---
+import { APP_BLOG } from 'astrowind:config';
+import Grid from '~/components/blog/Grid.astro';
+import { getRecommendedPosts } from '~/utils/blog';
+import WidgetWrapper from '~/components/ui/WidgetWrapper.astro';
+import type { Widget } from '~/types';
+import Button from '~/components/ui/Button.astro';
+import { getBlogPermalink } from '~/utils/permalinks';
+
+export interface Props extends Widget {
+  title?: string;
+  linkText?: string;
+  linkUrl?: string | URL;
+  information?: string;
+  count?: number;
+}
+
+const {
+  title = await Astro.slots.render('title'),
+  linkText = 'View all posts',
+  linkUrl = getBlogPermalink(),
+  information = await Astro.slots.render('information'),
+  count = 4,
+
+  id,
+  isDark = false,
+  classes = {},
+  bg = await Astro.slots.render('bg'),
+} = Astro.props;
+
+// Get recommended posts based on user behavior (viewed categories/tags)
+const recommendedPosts = APP_BLOG.isEnabled ? await getRecommendedPosts(count) : [];
+---
+
+{
+  APP_BLOG.isEnabled && recommendedPosts.length > 0 ? (
+    <WidgetWrapper id={id} isDark={isDark} containerClass={classes?.container as string} bg={bg}>
+      <div class="flex flex-col lg:justify-between lg:flex-row mb-8">
+        {title && (
+          <div class="md:max-w-sm">
+            <h2
+              class="text-3xl font-bold tracking-tight sm:text-4xl sm:leading-none group font-heading mb-2"
+              set:html={title}
+            />
+            {APP_BLOG.list.isEnabled && linkText && linkUrl && (
+              <Button variant="link" href={linkUrl}>
+                {' '}
+                {linkText} »
+              </Button>
+            )}
+          </div>
+        )}
+
+        {information && <p class="text-muted dark:text-slate-400 lg:text-sm lg:max-w-md" set:html={information} />}
+      </div>
+
+      <Grid posts={recommendedPosts} />
+    </WidgetWrapper>
+  ) : (
+    <Fragment />
+  )
+}
+
+<script>
+  // Track user behavior
+  function trackPostView(postId: string, categories: string[], tags: string[]) {
+    const viewedPosts = JSON.parse(localStorage.getItem('viewedPosts') || '[]');
+    const viewedCategories = JSON.parse(localStorage.getItem('viewedCategories') || '[]');
+    const viewedTags = JSON.parse(localStorage.getItem('viewedTags') || '[]');
+
+    // Add post if not already viewed
+    if (!viewedPosts.includes(postId)) {
+      viewedPosts.push(postId);
+    }
+
+    // Add categories
+    categories.forEach(cat => {
+      if (!viewedCategories.includes(cat)) {
+        viewedCategories.push(cat);
+      }
+    });
+
+    // Add tags
+    tags.forEach(tag => {
+      if (!viewedTags.includes(tag)) {
+        viewedTags.push(tag);
+      }
+    });
+
+    localStorage.setItem('viewedPosts', JSON.stringify(viewedPosts));
+    localStorage.setItem('viewedCategories', JSON.stringify(viewedCategories));
+    localStorage.setItem('viewedTags', JSON.stringify(viewedTags));
+  }
+
+  // Track when user views a post
+  document.addEventListener('DOMContentLoaded', () => {
+    const postData = document.querySelector('[data-post-id]');
+    if (postData) {
+      const postId = postData.getAttribute('data-post-id');
+      const categories = JSON.parse(postData.getAttribute('data-categories') || '[]');
+      const tags = JSON.parse(postData.getAttribute('data-tags') || '[]');
+      trackPostView(postId, categories, tags);
+    }
+  });
+</script>

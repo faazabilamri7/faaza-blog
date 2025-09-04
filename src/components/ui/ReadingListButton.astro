@@ -1,0 +1,140 @@
+---
+// ReadingListButton.astro - Button to add/remove posts from reading list
+interface Props {
+  postId: string;
+  postTitle: string;
+  postUrl: string;
+}
+
+const { postId, postTitle, postUrl } = Astro.props;
+---
+
+<button
+  class="reading-list-btn flex items-center space-x-2 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-400 transition-colors duration-200 text-sm font-medium"
+  data-post-id={postId}
+  data-post-title={postTitle}
+  data-post-url={postUrl}
+  aria-label="Add to reading list"
+>
+  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+  </svg>
+  <span class="reading-list-text">Add to Reading List</span>
+</button>
+
+<style>
+  .reading-list-btn.added {
+    background-color: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+  }
+
+  .reading-list-btn.added:hover {
+    background-color: #2563eb;
+    border-color: #2563eb;
+  }
+
+  .reading-list-btn.added .reading-list-text::before {
+    content: "✓ ";
+  }
+</style>
+
+<script>
+  // Reading list functionality using localStorage
+  class ReadingListManager {
+    private static STORAGE_KEY = 'astro-blog-reading-list';
+
+    static getReadingList(): any[] {
+      try {
+        const stored = localStorage.getItem(this.STORAGE_KEY);
+        return stored ? JSON.parse(stored) : [];
+      } catch (error) {
+        console.error('Error reading reading list from localStorage:', error);
+        return [];
+      }
+    }
+
+    static saveReadingList(list: any[]): void {
+      try {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(list));
+      } catch (error) {
+        console.error('Error saving reading list to localStorage:', error);
+      }
+    }
+
+    static addPost(postId: string, postTitle: string, postUrl: string): void {
+      const list = this.getReadingList();
+      const existingIndex = list.findIndex(item => item.id === postId);
+
+      if (existingIndex === -1) {
+        list.push({
+          id: postId,
+          title: postTitle,
+          url: postUrl,
+          addedAt: new Date().toISOString()
+        });
+        this.saveReadingList(list);
+      }
+    }
+
+    static removePost(postId: string): void {
+      const list = this.getReadingList();
+      const filteredList = list.filter(item => item.id !== postId);
+      this.saveReadingList(filteredList);
+    }
+
+    static isPostInList(postId: string): boolean {
+      const list = this.getReadingList();
+      return list.some(item => item.id === postId);
+    }
+  }
+
+  // Initialize buttons on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.reading-list-btn').forEach(button => {
+      const postId = button.getAttribute('data-post-id')!;
+      const postTitle = button.getAttribute('data-post-title')!;
+      const postUrl = button.getAttribute('data-post-url')!;
+
+      // Check if post is already in reading list
+      if (ReadingListManager.isPostInList(postId)) {
+        button.classList.add('added');
+        const textSpan = button.querySelector('.reading-list-text') as HTMLElement;
+        if (textSpan) {
+          textSpan.textContent = 'In Reading List';
+        }
+      }
+
+      // Add click handler
+      button.addEventListener('click', () => {
+        const isAdded = button.classList.contains('added');
+
+        if (isAdded) {
+          // Remove from reading list
+          ReadingListManager.removePost(postId);
+          button.classList.remove('added');
+          const textSpan = button.querySelector('.reading-list-text') as HTMLElement;
+          if (textSpan) {
+            textSpan.textContent = 'Add to Reading List';
+          }
+        } else {
+          // Add to reading list
+          ReadingListManager.addPost(postId, postTitle, postUrl);
+          button.classList.add('added');
+          const textSpan = button.querySelector('.reading-list-text') as HTMLElement;
+          if (textSpan) {
+            textSpan.textContent = 'In Reading List';
+          }
+        }
+
+        // Dispatch custom event for other components to listen to
+        window.dispatchEvent(new CustomEvent('readingListUpdated', {
+          detail: { postId, action: isAdded ? 'removed' : 'added' }
+        }));
+      });
+    });
+  });
+
+  // Export for use in other scripts
+  (window as any).ReadingListManager = ReadingListManager;
+</script>

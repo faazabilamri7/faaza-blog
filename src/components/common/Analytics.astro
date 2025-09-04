@@ -1,13 +1,50 @@
 ---
 import { GoogleAnalytics } from '@astrolib/analytics';
-import { ANALYTICS } from 'astrowind:config';
+
+const ga4Id = import.meta.env.PUBLIC_GA4_ID;
+const consentGiven = typeof window !== 'undefined' ? localStorage.getItem('cookie-consent') === 'accepted' : false;
 ---
 
 {
-  ANALYTICS?.vendors?.googleAnalytics?.id ? (
+  ga4Id && consentGiven ? (
     <GoogleAnalytics
-      id={String(ANALYTICS.vendors.googleAnalytics.id)}
-      partytown={ANALYTICS?.vendors?.googleAnalytics?.partytown}
+      id={ga4Id}
+      partytown={true}
     />
   ) : null
 }
+
+<script>
+  // Listen for consent
+  window.addEventListener('consent-given', () => {
+    if (import.meta.env.PUBLIC_GA4_ID) {
+      // Reload or initialize GA
+      location.reload();
+    }
+  });
+
+  // Track custom events
+  window.addEventListener('load', () => {
+    if (typeof gtag !== 'undefined') {
+      // Track time on page
+      let startTime = Date.now();
+      window.addEventListener('beforeunload', () => {
+        const timeSpent = Math.round((Date.now() - startTime) / 1000);
+        gtag('event', 'time_on_page', {
+          value: timeSpent,
+          custom_parameter_1: window.location.pathname
+        });
+      });
+
+      // Track user interactions (example: button clicks)
+      document.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') {
+          gtag('event', 'user_interaction', {
+            event_category: 'engagement',
+            event_label: e.target.textContent || e.target.href
+          });
+        }
+      });
+    }
+  });
+</script>

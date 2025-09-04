@@ -1,0 +1,211 @@
+---
+// RecommendationEngine.astro - Client-side recommendation tracking and display
+---
+
+<div id="recommendation-engine" class="hidden">
+  <!-- This component handles recommendation tracking -->
+</div>
+
+<script>
+  // Enhanced Recommendation Engine
+  class RecommendationEngine {
+    private static readonly STORAGE_KEY = 'blog-user-behavior';
+    private static readonly MAX_TRACKED_ITEMS = 50;
+
+    static init() {
+      this.trackPageView();
+      this.trackTimeSpent();
+      this.trackScrollDepth();
+      this.trackInteractions();
+    }
+
+    private static trackPageView() {
+      const currentPath = window.location.pathname;
+      const behavior = this.getUserBehavior();
+
+      // Add current page to viewed pages
+      if (!behavior.viewedPages.includes(currentPath)) {
+        behavior.viewedPages.push(currentPath);
+        if (behavior.viewedPages.length > this.MAX_TRACKED_ITEMS) {
+          behavior.viewedPages.shift();
+        }
+      }
+
+      // Update view count
+      behavior.pageViews = (behavior.pageViews || 0) + 1;
+
+      // Track categories and tags from data attributes
+      const postData = document.querySelector('[data-post-id]');
+      if (postData) {
+        const category = postData.getAttribute('data-categories');
+        const tags = postData.getAttribute('data-tags');
+
+        if (category && category !== '[]') {
+          const categories = JSON.parse(category);
+          categories.forEach((cat: string) => {
+            behavior.viewedCategories[cat] = (behavior.viewedCategories[cat] || 0) + 1;
+          });
+        }
+
+        if (tags && tags !== '[]') {
+          const tagList = JSON.parse(tags);
+          tagList.forEach((tag: string) => {
+            behavior.viewedTags[tag] = (behavior.viewedTags[tag] || 0) + 1;
+          });
+        }
+      }
+
+      this.saveUserBehavior(behavior);
+    }
+
+    private static trackTimeSpent() {
+      const startTime = Date.now();
+      let timeSpent = 0;
+
+      const interval = setInterval(() => {
+        timeSpent = Math.floor((Date.now() - startTime) / 1000);
+
+        if (timeSpent >= 300) { // 5 minutes
+          const behavior = this.getUserBehavior();
+          behavior.totalTimeSpent = (behavior.totalTimeSpent || 0) + timeSpent;
+          this.saveUserBehavior(behavior);
+          clearInterval(interval);
+        }
+      }, 10000); // Check every 10 seconds
+
+      // Clear interval on page unload
+      window.addEventListener('beforeunload', () => {
+        clearInterval(interval);
+        const behavior = this.getUserBehavior();
+        behavior.totalTimeSpent = (behavior.totalTimeSpent || 0) + Math.floor((Date.now() - startTime) / 1000);
+        this.saveUserBehavior(behavior);
+      });
+    }
+
+    private static trackScrollDepth() {
+      let maxScrollDepth = 0;
+
+      const updateScrollDepth = () => {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        const scrollDepth = Math.round(((scrollTop + windowHeight) / documentHeight) * 100);
+
+        if (scrollDepth > maxScrollDepth) {
+          maxScrollDepth = scrollDepth;
+
+          if (scrollDepth >= 75) { // Engaged reading
+            const behavior = this.getUserBehavior();
+            behavior.engagedReads = (behavior.engagedReads || 0) + 1;
+            this.saveUserBehavior(behavior);
+          }
+        }
+      };
+
+      window.addEventListener('scroll', updateScrollDepth, { passive: true });
+    }
+
+    private static trackInteractions() {
+      // Track clicks on links
+      document.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const link = target.closest('a');
+
+        if (link && link.href.includes('/post/')) {
+          const behavior = this.getUserBehavior();
+          const postSlug = link.href.split('/post/')[1]?.split('/')[0];
+
+          if (postSlug) {
+            behavior.clickedPosts[postSlug] = (behavior.clickedPosts[postSlug] || 0) + 1;
+            this.saveUserBehavior(behavior);
+          }
+        }
+      });
+
+      // Track social shares
+      document.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('[data-share]')) {
+          const behavior = this.getUserBehavior();
+          behavior.socialShares = (behavior.socialShares || 0) + 1;
+          this.saveUserBehavior(behavior);
+        }
+      });
+    }
+
+    static getUserBehavior() {
+      try {
+        const stored = localStorage.getItem(this.STORAGE_KEY);
+        return stored ? JSON.parse(stored) : {
+          viewedPages: [],
+          viewedCategories: {},
+          viewedTags: {},
+          clickedPosts: {},
+          pageViews: 0,
+          totalTimeSpent: 0,
+          engagedReads: 0,
+          socialShares: 0,
+          lastVisit: new Date().toISOString()
+        };
+      } catch (error) {
+        console.error('Error reading user behavior:', error);
+        return {
+          viewedPages: [],
+          viewedCategories: {},
+          viewedTags: {},
+          clickedPosts: {},
+          pageViews: 0,
+          totalTimeSpent: 0,
+          engagedReads: 0,
+          socialShares: 0,
+          lastVisit: new Date().toISOString()
+        };
+      }
+    }
+
+    private static saveUserBehavior(behavior: any) {
+      try {
+        behavior.lastVisit = new Date().toISOString();
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(behavior));
+      } catch (error) {
+        console.error('Error saving user behavior:', error);
+      }
+    }
+
+    static getRecommendedCategories(limit: number = 3): string[] {
+      const behavior = this.getUserBehavior();
+      const categories = Object.entries(behavior.viewedCategories)
+        .sort(([, a], [, b]) => (b as number) - (a as number))
+        .slice(0, limit)
+        .map(([category]) => category);
+
+      return categories;
+    }
+
+    static getRecommendedTags(limit: number = 5): string[] {
+      const behavior = this.getUserBehavior();
+      const tags = Object.entries(behavior.viewedTags)
+        .sort(([, a], [, b]) => (b as number) - (a as number))
+        .slice(0, limit)
+        .map(([tag]) => tag);
+
+      return tags;
+    }
+
+    static getEngagementScore(): number {
+      const behavior = this.getUserBehavior();
+      return (behavior.pageViews || 0) +
+             (behavior.engagedReads || 0) * 2 +
+             (behavior.socialShares || 0) * 3 +
+             Math.floor((behavior.totalTimeSpent || 0) / 60); // 1 point per minute
+    }
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    RecommendationEngine.init();
+  });
+
+  // Export for use in other components
+  (window as any).RecommendationEngine = RecommendationEngine;
+</script>

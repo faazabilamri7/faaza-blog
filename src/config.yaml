@@ -12,6 +12,7 @@ metadata:
     default: AstroWind
     template: '%s — AstroWind'
   description: "\U0001F680 Suitable for Startups, Small Business, Sass Websites, Professional Portfolios, Marketing Websites, Landing Pages & Blogs."
+  keywords: ["software engineering", "web development", "Astro", "Tailwind CSS", "blog", "tutorials", "resources"]
   robots:
     index: true
     follow: true
