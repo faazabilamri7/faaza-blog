@@ -1,0 +1,91 @@
+---
+// Sidebar component for Medium-like homepage
+import { fetchPosts } from '~/utils/blog';
+import { getPermalink } from '~/utils/permalinks';
+import type { Post } from '~/types';
+
+const posts = await fetchPosts();
+
+// Extract unique categories
+const categories = Array.from(
+  new Set(
+    posts
+      .filter(post => post.category)
+      .map(post => post.category!.slug)
+  )
+).map(slug => {
+  const post = posts.find(p => p.category?.slug === slug);
+  return post!.category!;
+});
+
+// Extract unique tags
+const allTags = posts.flatMap(post => post.tags || []);
+const tagCounts = allTags.reduce((acc, tag) => {
+  acc[tag.slug] = (acc[tag.slug] || 0) + 1;
+  return acc;
+}, {} as Record<string, number>);
+
+const tags = Object.entries(tagCounts)
+  .map(([slug, count]) => ({
+    slug,
+    title: allTags.find(t => t.slug === slug)!.title,
+    count
+  }))
+  .sort((a, b) => b.count - a.count)
+  .slice(0, 10); // Top 10 tags
+---
+
+<aside class="space-y-8">
+  <!-- Categories -->
+  <div>
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Categories</h3>
+    <ul class="space-y-2">
+      {categories.map(category => (
+        <li>
+          <a
+            href={getPermalink(category.slug, 'category')}
+            class="text-gray-600 hover:text-blue-600 transition-colors text-sm"
+          >
+            {category.title}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <!-- Tags -->
+  <div>
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">Popular Tags</h3>
+    <div class="flex flex-wrap gap-2">
+      {tags.map(tag => (
+        <a
+          href={getPermalink(tag.slug, 'tag')}
+          class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm transition-colors"
+        >
+          {tag.title} ({tag.count})
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <!-- Newsletter Signup -->
+  <div class="bg-gray-50 p-6 rounded-lg">
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">Stay Updated</h3>
+    <p class="text-gray-600 text-sm mb-4">
+      Get the latest posts delivered to your inbox.
+    </p>
+    <form class="space-y-3">
+      <input
+        type="email"
+        placeholder="Enter your email"
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <button
+        type="submit"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition-colors"
+      >
+        Subscribe
+      </button>
+    </form>
+  </div>
+</aside>
