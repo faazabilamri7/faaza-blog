@@ -1,0 +1,87 @@
+---
+import { Image } from 'astro:assets';
+
+const AUTHOR_DATA = {
+  name: 'Faaza Bil Amri',
+  role: 'Full Stack Developer',
+  bio: 'Passionate about web development, clean code, and creating meaningful digital experiences. I write about technology, development practices, and share my journey in the tech world.',
+  avatar: '/src/assets/images/author.jpg', // Make sure to add your photo to this path
+  social: [
+    {
+      name: 'GitHub',
+      url: 'https://github.com/faazabilamri7',
+      icon: 'mdi:github',
+    },
+    {
+      name: 'LinkedIn',
+      url: 'https://linkedin.com/in/your-linkedin', // Update with your LinkedIn URL
+      icon: 'mdi:linkedin',
+    },
+    {
+      name: 'Twitter',
+      url: 'https://twitter.com/your-twitter', // Update with your Twitter URL
+      icon: 'mdi:twitter',
+    },
+  ],
+  skills: ['TypeScript', 'React', 'Node.js', 'Next.js', 'Astro', 'TailwindCSS'],
+};
+---
+
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 transition-all duration-200 hover:shadow-md">
+  <div class="flex flex-col items-center text-center">
+    <!-- Avatar -->
+    <div class="relative w-24 h-24 mb-4">
+      <img
+        src={AUTHOR_DATA.avatar}
+        alt={AUTHOR_DATA.name}
+        class="rounded-full object-cover w-full h-full ring-2 ring-blue-500 dark:ring-blue-400 p-1"
+      />
+      <div
+        class="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"
+      >
+      </div>
+    </div>
+
+    <!-- Name and Role -->
+    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">
+      {AUTHOR_DATA.name}
+    </h3>
+    <p class="text-blue-600 dark:text-blue-400 font-medium text-sm mb-3">
+      {AUTHOR_DATA.role}
+    </p>
+
+    <!-- Bio -->
+    <p class="text-gray-600 dark:text-gray-300 text-sm mb-4">
+      {AUTHOR_DATA.bio}
+    </p>
+
+    <!-- Skills -->
+    <div class="flex flex-wrap justify-center gap-2 mb-4">
+      {
+        AUTHOR_DATA.skills.map((skill) => (
+          <span class="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
+            {skill}
+          </span>
+        ))
+      }
+    </div>
+
+    <!-- Social Links -->
+    <div class="flex space-x-3">
+      {
+        AUTHOR_DATA.social.map(({ name, url, icon }) => (
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+            title={name}
+          >
+            <span class="sr-only">{name}</span>
+            <i class={`text-xl ${icon}`} />
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</div>

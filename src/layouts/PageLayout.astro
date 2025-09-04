@@ -3,6 +3,7 @@ import Layout from '~/layouts/Layout.astro';
 import Header from '~/components/widgets/Header.astro';
 import Footer from '~/components/widgets/Footer.astro';
 import Announcement from '~/components/widgets/Announcement.astro';
+import AuthorCard from '~/components/widgets/AuthorCard.astro';
 
 import { headerData, footerData } from '~/navigation';
 
@@ -10,9 +11,10 @@ import type { MetaData } from '~/types';
 
 export interface Props {
   metadata?: MetaData;
+  showAuthor?: boolean;
 }
 
-const { metadata } = Astro.props;
+const { metadata, showAuthor = true } = Astro.props;
 ---
 
 <Layout metadata={metadata}>
@@ -23,6 +25,13 @@ const { metadata } = Astro.props;
     <Header {...headerData} isSticky showRssFeed showToggleTheme />
   </slot>
   <main>
+    {
+      showAuthor && (
+        <div class="fixed right-4 bottom-4 z-50 w-72 hidden lg:block">
+          <AuthorCard />
+        </div>
+      )
+    }
     <slot />
   </main>
   <slot name="footer">

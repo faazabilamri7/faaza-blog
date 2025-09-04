@@ -7,7 +7,7 @@ import FeaturedPost from '~/components/blog/FeaturedPost.astro';
 import Grid from '~/components/blog/Grid.astro';
 import List from '~/components/blog/List.astro';
 import Sidebar from '~/components/blog/Sidebar.astro';
-import { fetchPosts, findLatestPosts } from '~/utils/blog';
+import { fetchPosts } from '~/utils/blog';
 import { headerData } from '~/navigation';
 
 const metadata = {
@@ -16,59 +16,67 @@ const metadata = {
 };
 
 const posts = await fetchPosts();
-const featuredPosts = posts.slice(0, 3); // First 3 posts as featured
-const latestPosts = posts.slice(3, 13); // Next 10 posts for main feed
+const featuredPosts = posts.slice(0, 3);
+const latestPosts = posts.slice(3, 13);
 ---
 
 <Layout metadata={metadata}>
   <Fragment slot="announcement"></Fragment>
   <Fragment slot="header">
-    <Header
-      links={headerData.links}
-      actions={headerData.actions}
-      isSticky
-      showToggleTheme
-    />
+    <Header links={headerData.links} actions={headerData.actions} isSticky showToggleTheme />
   </Fragment>
 
-  <!-- Hero with Search -->
-  <Hero
-    title="Welcome to Our Blog"
-    tagline="Discover stories that matter"
+  <!-- Hero Section with Search -->
+  <div
+    class="relative bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300"
   >
-    <Fragment slot="subtitle">
-      <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-        Explore insightful articles, practical tips, and captivating narratives that inspire and educate.
-      </p>
-      <SearchBar />
-    </Fragment>
-  </Hero>
+    <div class="container mx-auto px-4 py-16 sm:py-24">
+      <div class="text-center max-w-3xl mx-auto">
+        <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6 transition-colors">
+          Welcome to Our Blog
+        </h1>
+        <p class="text-xl text-gray-600 dark:text-gray-300 mb-8 transition-colors">
+          Explore insightful articles, practical tips, and captivating narratives that inspire and educate.
+        </p>
+        <SearchBar />
+      </div>
+    </div>
+  </div>
+
+  <!-- Featured Posts -->
+  {
+    featuredPosts.length > 0 && (
+      <section class="py-12 bg-white dark:bg-gray-900 transition-colors">
+        <div class="container mx-auto px-4">
+          <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-8 transition-colors">
+            Featured Stories
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {featuredPosts.map((post) => (
+              <FeaturedPost post={post} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   <!-- Main Content -->
-  <section class="py-16 bg-gray-50">
+  <section class="py-16 bg-gray-50 dark:bg-gray-800 transition-colors">
     <div class="container mx-auto px-4">
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <!-- Main Content Area -->
         <div class="lg:col-span-3">
-          <!-- Featured Posts Grid -->
-          {featuredPosts.length > 0 && (
-            <div class="mb-12">
-              <h2 class="text-3xl font-bold text-gray-900 mb-8">Featured Articles</h2>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {featuredPosts.map(post => (
-                  <FeaturedPost post={post} />
-                ))}
+          {
+            latestPosts.length > 0 && (
+              <div>
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-8 transition-colors">
+                  Latest Posts
+                </h2>
+                <List posts={latestPosts} />
               </div>
-            </div>
-          )}
-
-          <!-- Main Posts Feed -->
-          {latestPosts.length > 0 && (
-            <div>
-              <h2 class="text-3xl font-bold text-gray-900 mb-8">Latest Posts</h2>
-              <List posts={latestPosts} />
-            </div>
-          )}
+            )
+          }
         </div>
 
         <!-- Sidebar -->
