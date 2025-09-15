@@ -15,6 +15,7 @@ export interface Props {
 }
 
 const { metadata, showAuthor = true } = Astro.props;
+const isHomepage = Astro.url.pathname === '/';
 ---
 
 <Layout metadata={metadata}>
@@ -26,7 +27,7 @@ const { metadata, showAuthor = true } = Astro.props;
   </slot>
   <main>
     {
-      showAuthor && (
+      showAuthor && !isHomepage && (
         <div class="fixed right-4 bottom-4 z-50 w-72 hidden lg:block">
           <AuthorCard />
         </div>

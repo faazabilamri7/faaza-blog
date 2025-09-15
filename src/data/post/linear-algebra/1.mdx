@@ -1,0 +1,179 @@
+---
+title: "What Are Vectors? A Complete Beginner's Guide to the Building Blocks of Linear Algebra"
+---
+
+Ever wondered how GPS systems calculate the shortest route to your destination? Or how video games create those smooth character movements across your screen? The secret lies in something called **vectors** – the fundamental building blocks of linear algebra that power much of our digital world.
+
+Don't worry if math isn't your strongest subject. By the end of this article, you'll understand what vectors are, why they matter, and how they work in surprisingly simple terms. We'll explore three different ways to think about vectors and show you the two basic operations that make everything else in linear algebra possible.
+
+This article is a transcript from the YouTube video:
+
+<div style="display: flex; justify-content: center;">
+  <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; width: 100%;">
+    <iframe
+      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+      src="https://www.youtube.com/embed/fNk_zzaMoSs"
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      allowfullscreen
+    ></iframe>
+  </div>
+</div>
+
+## Three Ways to Think About Vectors
+
+### 1. The Arrow Perspective (Physics Students Love This)
+
+Imagine you're giving directions to a friend. Instead of saying "go three blocks north, then two blocks east," you could simply draw an arrow on a map pointing from their current location to their destination. That arrow is essentially a vector.
+
+**Key characteristics of the arrow view:**
+
+- **Direction**: Which way the arrow points
+- **Length**: How long the arrow is (representing magnitude or strength)
+- **Position flexibility**: You can move the arrow anywhere on the map, and as long as it points the same direction and has the same length, it's the same vector
+
+Think of it like this: whether you draw an arrow representing "5 miles northeast" on a map of New York or Los Angeles, it's still the same vector – same direction, same distance.
+
+### 2. The List Perspective (Computer Scientists Prefer This)
+
+Now imagine you're a real estate analyst studying house prices. For each house, you care about two things: square footage and price. You might represent each house as a simple list of two numbers:
+
+- House A: [1,200 sq ft, $300,000]
+- House B: [2,000 sq ft, $450,000]
+- House C: [800 sq ft, $250,000]
+
+Each of these lists is a vector! In this view, a vector is simply an **ordered list of numbers** where the position of each number matters.
+
+**Why order matters:** [1,200, 300,000] means something completely different from [300,000, 1,200]. The first number always represents square footage, the second always represents price.
+
+### 3. The Abstract Perspective (Mathematicians Think This Way)
+
+Mathematicians look at both the arrow view and the list view and say, "What do these have in common?" They realize that the most important thing about vectors isn't what they look like, but what you can **do** with them.
+
+From this perspective, a vector is anything that follows two simple rules:
+
+1. You can add two vectors together
+2. You can multiply a vector by a number
+
+We'll explore what these operations mean in just a moment.
+
+## Setting Up Our Coordinate System
+
+To make vectors concrete and visual, let's establish a coordinate system – think of it as the foundation for our vector playground.
+
+### The 2D Coordinate System
+
+Picture a simple graph with two lines:
+
+- A **horizontal line** (x-axis) running left to right
+- A **vertical line** (y-axis) running up and down
+- The point where they cross is the **origin** (0,0)
+
+**Important rule in linear algebra:** Unlike in physics where arrows can float anywhere, in linear algebra we always start our vectors at the origin. Think of the origin as "home base" for all vectors.
+
+### Reading Vector Coordinates
+
+When we write a vector like [3, 2], we're giving step-by-step directions from the origin:
+
+1. **First number (3):** Move 3 units to the right along the x-axis
+2. **Second number (2):** Move 2 units up along the y-axis
+
+**Negative numbers work too:**
+
+- [-2, 1] means: Move 2 units left, then 1 unit up
+- [4, -3] means: Move 4 units right, then 3 units down
+
+### Extending to 3D
+
+Adding a third dimension is simple – just add a z-axis that points "out of the page" toward you. Now vectors have three coordinates [x, y, z]:
+
+- [2, 3, 1] means: 2 right, 3 up, 1 forward
+- [-1, 0, 2] means: 1 left, stay level, 2 forward
+
+## The Two Fundamental Vector Operations
+
+Every advanced concept in linear algebra builds on these two simple operations. Master these, and you're well on your way to understanding the entire field.
+
+### Operation 1: Vector Addition
+
+**The Tip-to-Tail Method:**
+
+Imagine you're planning a treasure hunt with two clues:
+
+1. First clue: "Walk 2 steps east, then 3 steps north" → Vector [2, 3]
+2. Second clue: "From there, walk 1 step east, then 1 step south" → Vector [1, -1]
+
+To find the treasure, you'd follow both clues in sequence. Vector addition works the same way:
+
+1. **Draw the first vector** from the origin
+2. **Move the second vector** so its tail starts where the first vector's tip ends
+3. **Draw a new vector** from the origin to where the second vector's tip now sits
+
+**The numerical shortcut:** Simply add the corresponding numbers:
+
+- [2, 3] + [1, -1] = [2+1, 3+(-1)] = [3, 2]
+
+**Real-world example:** If you drive 20 mph east and the wind pushes you 5 mph north, your overall movement is the sum of these two velocity vectors.
+
+### Operation 2: Scalar Multiplication
+
+A "scalar" is just a fancy word for a regular number. When you multiply a vector by a scalar, you're scaling (stretching or shrinking) that vector.
+
+**What happens when you multiply:**
+
+- **Multiply by 2:** The vector becomes twice as long in the same direction
+- **Multiply by 0.5:** The vector becomes half as long in the same direction
+- **Multiply by -1:** The vector flips to point in the opposite direction but keeps the same length
+- **Multiply by -3:** The vector flips direction AND becomes 3 times longer
+
+**The numerical method:** Multiply each coordinate by the scalar:
+
+- 2 × [3, 1] = [2×3, 2×1] = [6, 2]
+- -0.5 × [4, 2] = [-2, -1]
+
+**Real-world example:** If you're walking at [3, 2] mph and you double your speed, you're now moving at [6, 4] mph in the same direction.
+
+## Why Vectors Matter in the Real World
+
+### For Data Analysts
+
+Vectors help visualize complex data patterns. Instead of staring at endless spreadsheets, you can represent data points as vectors and literally see relationships and trends in space.
+
+### For Physicists
+
+Every force, velocity, and acceleration is a vector. Understanding vectors means understanding how objects move through space and time.
+
+### For Computer Graphics
+
+Every pixel on your screen, every 3D character movement in video games, and every special effect in movies relies on vector calculations.
+
+### For Engineers
+
+From designing bridges to programming robots, vectors help engineers describe and manipulate objects in space with mathematical precision.
+
+## Putting It All Together
+
+Vectors are remarkably simple yet incredibly powerful. They bridge the gap between abstract mathematics and concrete, visual understanding. Whether you think of them as arrows in space or lists of numbers, the key insight is that they can be added together and scaled by numbers.
+
+These two simple operations – addition and scalar multiplication – are the foundation for everything else in linear algebra. Once you're comfortable with these concepts, you'll be ready to explore more advanced topics like linear transformations, eigenvalues, and vector spaces.
+
+The beauty of vectors lies in their versatility. They provide a common language that mathematicians, physicists, computer scientists, and engineers all use to describe and manipulate the world around us.
+
+## Frequently Asked Questions
+
+**Q: Do I need to be good at math to understand vectors?**
+A: Not at all! The basic concepts are quite intuitive. If you can follow directions on a map or understand coordinates in a video game, you already have the foundation you need. The mathematical formality comes later – start with the visual understanding.
+
+**Q: What's the difference between a point and a vector?**
+A: Great question! A point represents a location in space, like "the corner of 5th and Main Street." A vector represents movement or direction, like "go 3 blocks north, then 2 blocks east." Points are destinations; vectors are journeys. We write points as (3, 2) with parentheses and vectors as [3, 2] with brackets.
+
+**Q: Why do we always start vectors at the origin in linear algebra?**
+A: Starting at the origin (0,0) creates a standard reference point that makes calculations consistent and predictable. While physics allows vectors to start anywhere, linear algebra focuses on the mathematical properties that work best when everything has a common starting point.
+
+## Ready to Explore Further?
+
+Now that you understand the basics of vectors, you're ready to dive deeper into linear algebra! Try visualizing some simple vectors on graph paper, or explore online graphing tools to see how vector addition and scalar multiplication work in practice.
+
+The next concepts to explore are linear combinations, span, and basis vectors – all of which build directly on what you've learned here. Remember, every expert started exactly where you are now. Take it one step at a time, and you'll be amazed at how far these simple concepts can take you!
+
+**What questions do you have about vectors? Share your thoughts in the comments below – understanding grows through discussion!**
