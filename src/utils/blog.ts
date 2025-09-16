@@ -94,6 +94,7 @@ const getNormalizedPost = async (post: CollectionEntry<'post'>): Promise<Post> =
     metadata,
 
     Content: Content,
+    content: post.body,
     // or 'content' in case you consume from API
 
     readingTime: remarkPluginFrontmatter?.readingTime,

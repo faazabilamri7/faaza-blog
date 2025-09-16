@@ -14,6 +14,8 @@ import type { AstroIntegration } from 'astro';
 import astrowind from './vendor/integration';
 
 import { readingTimeRemarkPlugin, responsiveTablesRehypePlugin, lazyImagesRehypePlugin } from './src/utils/frontmatter';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -29,7 +31,10 @@ export default defineConfig({
       applyBaseStyles: false,
     }),
     sitemap(),
-    mdx(),
+    mdx({
+      remarkPlugins: [readingTimeRemarkPlugin, remarkMath],
+      rehypePlugins: [responsiveTablesRehypePlugin, lazyImagesRehypePlugin, rehypeKatex],
+    }),
     icon({
       include: {
         tabler: ['*'],

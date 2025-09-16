@@ -3,7 +3,7 @@ import { Image } from 'astro:assets';
 
 const AUTHOR_DATA = {
   name: 'Faaza Bil Amri',
-  role: 'Full Stack Developer',
+  role: 'I Love Data & Coding',
   bio: 'Passionate about web development, clean code, and creating meaningful digital experiences. I write about technology, development practices, and share my journey in the tech world.',
   avatar: '/src/assets/images/author.jpg', // Make sure to add your photo to this path
   social: [
@@ -14,23 +14,19 @@ const AUTHOR_DATA = {
     },
     {
       name: 'LinkedIn',
-      url: 'https://linkedin.com/in/your-linkedin', // Update with your LinkedIn URL
+      url: 'https://linkedin.com/in/faazabilamri', // Update with your LinkedIn URL
       icon: 'mdi:linkedin',
-    },
-    {
-      name: 'Twitter',
-      url: 'https://twitter.com/your-twitter', // Update with your Twitter URL
-      icon: 'mdi:twitter',
     },
   ],
   skills: ['TypeScript', 'React', 'Node.js', 'Next.js', 'Astro', 'TailwindCSS'],
 };
+const { isMobile = false } = Astro.props;
 ---
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 transition-all duration-200 hover:shadow-md">
-  <div class="flex flex-col items-center text-center">
+  <div class={`flex ${isMobile ? 'flex-col items-center text-center' : 'flex-row items-center'}`}>
     <!-- Avatar -->
-    <div class="relative w-24 h-24 mb-4">
+    <div class={`relative w-24 h-24 ${isMobile ? 'mb-4' : 'mr-4'}`}>
       <img
         src={AUTHOR_DATA.avatar}
         alt={AUTHOR_DATA.name}
@@ -42,46 +38,94 @@ const AUTHOR_DATA = {
       </div>
     </div>
 
-    <!-- Name and Role -->
-    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">
-      {AUTHOR_DATA.name}
-    </h3>
-    <p class="text-blue-600 dark:text-blue-400 font-medium text-sm mb-3">
-      {AUTHOR_DATA.role}
-    </p>
+    {isMobile ? (
+      <>
+        <!-- Name and Role -->
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1">
+          {AUTHOR_DATA.name}
+        </h3>
+        <p class="text-blue-600 dark:text-blue-400 font-medium text-sm mb-3">
+          {AUTHOR_DATA.role}
+        </p>
 
-    <!-- Bio -->
-    <p class="text-gray-600 dark:text-gray-300 text-sm mb-4">
-      {AUTHOR_DATA.bio}
-    </p>
+        <!-- Bio -->
+        <p class="text-gray-600 dark:text-gray-300 text-sm mb-4">
+          {AUTHOR_DATA.bio}
+        </p>
 
-    <!-- Skills -->
-    <div class="flex flex-wrap justify-center gap-2 mb-4">
-      {
-        AUTHOR_DATA.skills.map((skill) => (
-          <span class="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
-            {skill}
-          </span>
-        ))
-      }
-    </div>
+        <!-- Skills -->
+        <div class="flex flex-wrap justify-center gap-2 mb-4">
+          {
+            AUTHOR_DATA.skills.map((skill) => (
+              <span class="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
+                {skill}
+              </span>
+            ))
+          }
+        </div>
 
-    <!-- Social Links -->
-    <div class="flex space-x-3">
-      {
-        AUTHOR_DATA.social.map(({ name, url, icon }) => (
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
-            title={name}
-          >
-            <span class="sr-only">{name}</span>
-            <i class={`text-xl ${icon}`} />
-          </a>
-        ))
-      }
-    </div>
+        <!-- Social Links -->
+        <div class="flex justify-center space-x-3">
+          {
+            AUTHOR_DATA.social.map(({ name, url, icon }) => (
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+                title={name}
+              >
+                <span class="sr-only">{name}</span>
+                <i class={`text-xl ${icon}`} />
+              </a>
+            ))
+          }
+        </div>
+      </>
+    ) : (
+      <div class="flex flex-col">
+        <!-- Name and Role -->
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1 text-left">
+          {AUTHOR_DATA.name}
+        </h3>
+        <p class="text-blue-600 dark:text-blue-400 font-medium text-sm mb-3 text-left">
+          {AUTHOR_DATA.role}
+        </p>
+
+        <!-- Bio -->
+        <p class="text-gray-600 dark:text-gray-300 text-sm mb-4 text-left">
+          {AUTHOR_DATA.bio}
+        </p>
+
+        <!-- Skills -->
+        <div class="flex flex-wrap justify-start gap-2 mb-4">
+          {
+            AUTHOR_DATA.skills.map((skill) => (
+              <span class="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
+                {skill}
+              </span>
+            ))
+          }
+        </div>
+
+        <!-- Social Links -->
+        <div class="flex space-x-3">
+          {
+            AUTHOR_DATA.social.map(({ name, url, icon }) => (
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+                title={name}
+              >
+                <span class="sr-only">{name}</span>
+                <i class={`text-xl ${icon}`} />
+              </a>
+            ))
+          }
+        </div>
+      </div>
+    )}
   </div>
 </div>

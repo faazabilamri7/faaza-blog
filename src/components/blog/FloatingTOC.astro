@@ -1,0 +1,219 @@
+---
+interface Heading {
+  level: number;
+  text: string;
+  id: string;
+  children: Heading[];
+}
+---
+
+<div
+  id="floating-toc"
+  class="fixed left-0 top-[150px] w-[280px] z-40 hidden md:block bg-white shadow-lg rounded-lg p-4 ml-4 transition-opacity duration-300 ease-in-out opacity-100"
+>
+  <h3 class="text-base font-semibold mb-4 text-gray-800">Table of Contents</h3>
+  <div id="toc-list" class="max-h-[400px] overflow-y-auto"></div>
+</div>
+<script>
+  interface Heading {
+    level: number;
+    text: string;
+    id: string;
+    children: Heading[];
+  }
+
+  // Debounce function for performance optimization
+  function debounce(func: Function, wait: number) {
+    let timeout: number;
+    return function executedFunction(...args: any[]) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait) as unknown as number;
+    };
+  }
+
+  // Function to parse headings from DOM
+  function parseHeadings(): Heading[] {
+    const headings = document.querySelectorAll('.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6');
+    const headingArray: Heading[] = [];
+    headings.forEach((h) => {
+      const level = parseInt(h.tagName.charAt(1));
+      let id = h.id;
+      if (!id) {
+        id = h
+          .textContent!.trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+        if (id) h.id = id;
+      }
+      if (id) {
+        // Only include if has id
+        headingArray.push({
+          level,
+          text: h.textContent!.trim(),
+          id,
+          children: [],
+        });
+      }
+    });
+    return headingArray;
+  }
+
+  // Function to build nested structure
+  function buildNestedHeadings(headings: Heading[]): Heading[] {
+    const root: Heading[] = [];
+    const stack: Heading[] = [];
+    headings.forEach((heading) => {
+      while (stack.length > 0 && stack[stack.length - 1].level >= heading.level) {
+        stack.pop();
+      }
+      if (stack.length === 0) {
+        root.push(heading);
+      } else {
+        stack[stack.length - 1].children.push(heading);
+      }
+      stack.push(heading);
+    });
+    return root;
+  }
+
+  // Recursive function to render headings
+  function renderHeadings(headings: Heading[], level: number = 0): string {
+    if (headings.length === 0) return '';
+    return `<ul class="list-none ${level > 0 ? 'ml-4' : ''}">
+      ${headings
+        .map(
+          (heading) => `
+        <li class="mb-2">
+          <a href="#${heading.id}" data-heading-id="${heading.id}" class="text-xs text-gray-700 hover:text-blue-600 transition-colors duration-200 block py-1">
+            ${heading.text}
+          </a>
+          ${renderHeadings(heading.children, level + 1)}
+        </li>
+      `
+        )
+        .join('')}
+    </ul>`;
+  }
+
+  // Function to initialize TOC
+  function initTOC() {
+    const headings = parseHeadings();
+    const nestedHeadings = buildNestedHeadings(headings);
+    const tocList = document.getElementById('toc-list');
+    const tocContainer = document.getElementById('floating-toc');
+    if (tocList && tocContainer) {
+      if (nestedHeadings.length > 0) {
+        tocList.innerHTML = renderHeadings(nestedHeadings);
+      } else {
+        tocList.innerHTML = '<p class="text-xs text-gray-500">No headings found.</p>';
+        tocContainer.style.display = 'none'; // Hide TOC if no headings
+        return;
+      }
+    }
+
+    const tocLinks = document.querySelectorAll('#floating-toc a[data-heading-id]');
+    const headingElements = document.querySelectorAll(
+      '.prose h1[id], .prose h2[id], .prose h3[id], .prose h4[id], .prose h5[id], .prose h6[id]'
+    );
+
+    if (headingElements.length === 0 || tocLinks.length === 0) return;
+
+    let currentActiveLink: HTMLElement | null = null;
+
+    // IntersectionObserver for active heading detection
+    const observer = new IntersectionObserver(
+      debounce((entries) => {
+        const intersecting = entries.filter((entry) => entry.isIntersecting);
+        if (intersecting.length === 0) return;
+
+        // Find the heading closest to the top of the viewport
+        const sorted = intersecting.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        const activeHeading = sorted[0].target as HTMLElement;
+        const activeId = activeHeading.id;
+
+        // Find and update the corresponding TOC link
+        const activeLink = document.querySelector(
+          `#floating-toc a[data-heading-id="${activeId}"]`
+        ) as HTMLElement | null;
+        if (activeLink && activeLink !== currentActiveLink) {
+          // Remove active state from previous link
+          if (currentActiveLink) {
+            currentActiveLink.classList.remove('font-bold', 'border-l-2', 'border-blue-500', 'pl-2');
+          }
+          // Add active state to new link
+          activeLink.classList.add('font-bold', 'text-sm', 'border-l-2', 'border-blue-500', 'pl-2');
+          currentActiveLink = activeLink;
+        }
+      }, 100),
+      {
+        rootMargin: '-80px 0px -80% 0px',
+        threshold: 0,
+      }
+    );
+
+    // Observe all headings
+    headingElements.forEach((heading) => observer.observe(heading));
+
+    // TOC visibility observer
+    const article = document.querySelector('article');
+    const tocVisibilityObserver = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        const toc = document.getElementById('floating-toc');
+        if (toc) {
+          toc.style.opacity = entry.isIntersecting ? '1' : '0';
+        }
+      },
+      {
+        rootMargin: '0px 0px -100px 0px',
+        threshold: 0,
+      }
+    );
+    if (article) {
+      tocVisibilityObserver.observe(article);
+      // Initial visibility check
+      const rect = article.getBoundingClientRect();
+      const isVisible = rect.top < window.innerHeight && rect.bottom > 100;
+      const toc = document.getElementById('floating-toc');
+      if (toc) {
+        toc.style.opacity = isVisible ? '1' : '0';
+      }
+    }
+
+    // Click handlers for smooth scrolling
+    tocLinks.forEach((link) => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const id = (link as HTMLElement).dataset.headingId;
+        if (!id) return;
+        const element = document.getElementById(id);
+        if (element) {
+          const y = element.getBoundingClientRect().top + window.pageYOffset - 80;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+        }
+      });
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+      observer.disconnect();
+      tocVisibilityObserver.disconnect();
+    });
+  }
+
+  // Initialize TOC on page load and after Astro view transitions
+  function initializeTOC() {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initTOC);
+    } else {
+      initTOC();
+    }
+    document.addEventListener('astro:after-swap', initTOC);
+  }
+  initializeTOC();
+</script>

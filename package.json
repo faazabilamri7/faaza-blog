@@ -1,7 +1,7 @@
 {
-  "name": "@onwidget/astrowind",
+  "name": "faaza-blog",
   "version": "1.0.0-beta.52",
-  "description": "AstroWind: A free template using Astro 5.0 and Tailwind CSS. Astro starter theme.",
+  "description": "Faaza Bil Amri Blog: A personal blog built with Astro 5.0 and Tailwind CSS.",
   "type": "module",
   "private": true,
   "engines": {
@@ -32,6 +32,8 @@
     "astro-icon": "^1.1.5",
     "limax": "4.1.0",
     "lodash.merge": "^4.6.2",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
     "unpic": "^4.1.3"
   },
   "devDependencies": {
